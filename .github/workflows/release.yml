@@ -1,0 +1,72 @@
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push image
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ghcr.io/${{ github.repository_owner }}/tool-nodestatus:${{ github.ref_name }}
+          outputs: type=image,name=ghcr.io/${{ github.repository_owner }}/tool-nodestatus,push-by-digest=true,name-canonical=true
+
+      - name: Export digest
+        id: digest
+        run: |
+          mkdir -p /tmp/dig && cd /tmp/dig
+          echo '${{ steps.build.outputs.metadata }}' > meta.json
+          python3 -c "
+          import json
+          m = json.load(open('meta.json'))
+          d = m['containerimage.digest']
+          open('digest.txt','w').write(d)
+          print('digest:', d)"
+          echo "value=$(cat digest.txt)" >> "$GITHUB_OUTPUT"
+
+      - name: Build and sign mikan-addon.json
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+          IMAGE_DIGEST: ${{ steps.digest.outputs.value }}
+          REPO_OWNER: ${{ github.repository_owner }}
+          REPO_NAME: ${{ github.event.repository.name }}
+          ADDON_PUBKEY: ${{ secrets.MIKAN_ADDON_PUBKEY }}
+          MIKAN_ADDON_SIGNING_KEY: ${{ secrets.MIKAN_ADDON_SIGNING_KEY }}
+        run: |
+          pip install -q pynacl
+          python3 tools/mkrelease.py
+          cat mikan-addon.json
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            mikan-addon.json
+            mikan-addon.json.sig
+          generate_release_notes: true
