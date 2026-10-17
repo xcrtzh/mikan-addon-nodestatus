@@ -36,6 +36,30 @@ func main() {
 
 	go proberLoop(kv)
 
+	// Public status server: serves only the status page, no auth, no admin
+	// endpoints. Lets the addon serve users directly without a reverse proxy.
+	// The panel-facing server above stays on loopback with auth.
+	publicMux := http.NewServeMux()
+	publicMux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/" {
+			writeJSON(w, 404, map[string]string{"code": "not_found"})
+			return
+		}
+		handlePublicStatus(kv)(w, r)
+	})
+	go func() {
+		psrv := &http.Server{
+			Addr:         "0.0.0.0:8080",
+			Handler:      publicMux,
+			ReadTimeout:  15 * time.Second,
+			WriteTimeout: 20 * time.Second,
+		}
+		log.Printf("nodestatus: public status on %s", psrv.Addr)
+		if err := psrv.ListenAndServe(); err != nil {
+			log.Printf("nodestatus: public server stopped: %v", err)
+		}
+	}()
+
 	srv := &http.Server{
 		Addr:         listenAddr,
 		Handler:      mux,

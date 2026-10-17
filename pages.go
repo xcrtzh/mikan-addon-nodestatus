@@ -102,22 +102,33 @@ func renderPublicPage(cfg Config, kv *KV, doc StatusDoc) string {
 <title>%s</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#0f1115;color:#e7e9ee;min-height:100vh}
-.wrap{max-width:680px;margin:0 auto;padding:24px 16px}
-.header{display:flex;align-items:center;justify-content:space-between;background:#171a21;border:1px solid #262b36;border-radius:12px;padding:16px 20px;margin-bottom:14px}
-.header h1{font-size:18px;font-weight:700}
-.overall{display:flex;align-items:center;gap:8px;font-size:13px;color:#9aa1ad}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#0f1115;color:#e7e9ee;min-height:100vh;-webkit-text-size-adjust:100%%}
+.wrap{max-width:680px;margin:0 auto;padding:20px 16px}
+.header{display:flex;align-items:center;justify-content:space-between;gap:12px;background:#171a21;border:1px solid #262b36;border-radius:14px;padding:16px 18px;margin-bottom:12px}
+.header h1{font-size:18px;font-weight:700;line-height:1.3}
+.overall{display:flex;align-items:center;gap:8px;font-size:13px;color:#9aa1ad;white-space:nowrap}
 .dot{width:10px;height:10px;border-radius:50%%;display:inline-block;flex-shrink:0}
-.node{background:#171a21;border:1px solid #262b36;border-radius:12px;padding:16px 20px;margin-bottom:12px}
-.node-head{display:flex;align-items:center;gap:8px;margin-bottom:12px}
-.node-name{font-weight:600;font-size:15px}
+.node{background:#171a21;border:1px solid #262b36;border-radius:14px;padding:16px 18px;margin-bottom:12px}
+.node-head{display:flex;align-items:center;gap:10px;margin-bottom:12px;min-height:28px}
+.node-name{font-weight:600;font-size:15px;line-height:1.3}
 .node-code{color:#9aa1ad;font-weight:400;font-size:13px}
-.lat{margin-left:auto;font-size:13px;color:#9aa1ad}
-.bars{display:flex;gap:2px;margin-bottom:10px}
+.lat{margin-left:auto;font-size:13px;color:#9aa1ad;white-space:nowrap;font-variant-numeric:tabular-nums}
+.bars{display:flex;gap:2px;margin-bottom:10px;min-height:26px}
 .bar{flex:1;min-width:2px;height:26px;border-radius:2px}
-.meta{display:flex;gap:18px;font-size:12px;color:#9aa1ad}
-.meta b{color:#e7e9ee}
-.footer{text-align:center;color:#6b7280;font-size:12px;margin-top:16px}
+.meta{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:#9aa1ad}
+.meta b{color:#e7e9ee;font-variant-numeric:tabular-nums}
+.footer{text-align:center;color:#6b7280;font-size:12px;margin-top:16px;padding:0 8px;line-height:1.5}
+@media (max-width:480px){
+.wrap{padding:12px 10px}
+.header{padding:14px 14px;border-radius:12px}
+.header h1{font-size:16px}
+.node{padding:14px;border-radius:12px}
+.node-head{flex-wrap:wrap;row-gap:6px}
+.lat{font-size:12px}
+.bars{overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch}
+.bar{min-width:3px;height:30px}
+.meta{gap:12px;font-size:11px}
+}
 </style>
 </head>
 <body>
