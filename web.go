@@ -16,6 +16,9 @@ var adminHTML string
 //go:embed ui/style.css
 var adminCSS string
 
+//go:embed ui/themes.css
+var adminThemesCSS string
+
 func handleUI(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		writeJSON(w, 405, map[string]string{"code": "invalid", "message": "method not allowed"})
@@ -28,6 +31,9 @@ func handleUI(w http.ResponseWriter, r *http.Request) {
 	case "style.css":
 		w.Header().Set("Content-Type", "text/css; charset=utf-8")
 		w.Write([]byte(adminCSS))
+	case "themes.css":
+		w.Header().Set("Content-Type", "text/css; charset=utf-8")
+		w.Write([]byte(adminThemesCSS))
 	default:
 		writeJSON(w, 404, map[string]string{"code": "not_found", "message": "no such file"})
 	}
