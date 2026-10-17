@@ -99,6 +99,7 @@ type Config struct {
 	IntervalSec   int        `json:"interval_sec"`
 	LatencyWarnMs int        `json:"latency_warn_ms"`
 	PublicTitle   string     `json:"public_title"`
+	UITheme       string     `json:"ui_theme"`
 	PagesOwner    string     `json:"pages_owner"`
 	PagesRepo     string     `json:"pages_repo"`
 	PagesBranch   string     `json:"pages_branch"`
@@ -112,6 +113,7 @@ func defaultConfig() Config {
 		IntervalSec:   60,
 		LatencyWarnMs: 500,
 		PublicTitle:   "Статус серверов",
+		UITheme:       "system",
 		PagesBranch:   "main",
 		PagesEveryMin: 2,
 	}

@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Статус нод</title>
+<link rel="stylesheet" href="themes.css">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -30,6 +31,9 @@
       </label>
       <label>Обновление публичной страницы, мин
         <input id="cfg-pages-every" type="number" min="1" value="2">
+      </label>
+      <label>Тема интерфейса
+        <select id="cfg-theme"></select>
       </label>
     </div>
     <label>Ноды (JSON)
@@ -62,6 +66,40 @@
   </div>
 </div>
 <script>
+// Themes mirror the panel's own list (mikan web/src/lib/themes.ts).
+const LIGHT_THEMES = ["mikan","ocean","sakura","forest","latte","snow","dawn","dune"];
+const DARK_THEMES = ["midnight","graphite","abyss","ember","plum","moss","terminal","nord","mocha","tokyo","dracula","aurora","cosmos"];
+const THEME_NAMES = {mikan:"Mikan",ocean:"Ocean",sakura:"Sakura",forest:"Forest",latte:"Latte",snow:"Snow",dawn:"Dawn",dune:"Dune",midnight:"Midnight",graphite:"Graphite",abyss:"Abyss",ember:"Ember",plum:"Plum",moss:"Moss",terminal:"Terminal",nord:"Nord",mocha:"Mocha",tokyo:"Tokyo",dracula:"Dracula",aurora:"Aurora",cosmos:"Cosmos"};
+
+let uiTheme = "system";
+function resolveTheme() {
+  if (uiTheme !== "system") return uiTheme;
+  return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "midnight" : "mikan";
+}
+function applyTheme() {
+  const t = resolveTheme();
+  const root = document.documentElement;
+  root.dataset.theme = t;
+  root.dataset.tone = DARK_THEMES.includes(t) ? "dark" : "light";
+}
+function buildThemeSelect() {
+  const sel = document.getElementById("cfg-theme");
+  const mk = (v, label) => { const o = document.createElement("option"); o.value = v; o.textContent = label; return o; };
+  sel.appendChild(mk("system", "Как в системе (авто)"));
+  const gl = document.createElement("optgroup"); gl.label = "Светлые";
+  LIGHT_THEMES.forEach(t => gl.appendChild(mk(t, THEME_NAMES[t])));
+  const gd = document.createElement("optgroup"); gd.label = "Тёмные";
+  DARK_THEMES.forEach(t => gd.appendChild(mk(t, THEME_NAMES[t])));
+  sel.appendChild(gl); sel.appendChild(gd);
+  sel.value = uiTheme;
+  sel.onchange = () => { uiTheme = sel.value; applyTheme(); };
+}
+if (window.matchMedia) {
+  window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { if (uiTheme === "system") applyTheme(); });
+}
+buildThemeSelect();
+applyTheme();
+
 let seq = 0;
 const pending = {};
 function rpc(method, path, body) {
@@ -79,12 +117,12 @@ window.addEventListener("message", (e) => {
   p.resolve(d.json !== undefined ? d.json : (d.body !== undefined ? d.body : d.data));
 });
 
-const dotColor = s => s === "up" ? "#22c55e" : s === "degraded" ? "#eab308" : s === "down" ? "#ef4444" : "#6b7280";
+const dotColor = s => s === "up" ? "var(--leaf-500)" : s === "degraded" ? "var(--honey-500)" : s === "down" ? "var(--berry-600)" : "var(--ink-400)";
 const pct = v => (v === undefined || v === null || v < 0) ? "—" : v.toFixed(2) + "%";
 
 function barColor(v) {
-  if (v === undefined || v === null || v < 0) return "#3f3f46";
-  return v >= 99 ? "#22c55e" : v >= 95 ? "#eab308" : "#ef4444";
+  if (v === undefined || v === null || v < 0) return "var(--ink-200)";
+  return v >= 99 ? "var(--leaf-500)" : v >= 95 ? "var(--honey-500)" : "var(--berry-600)";
 }
 
 async function loadStatus() {
@@ -94,7 +132,7 @@ async function loadStatus() {
     const allUp = nodes.length > 0 && nodes.every(n => n.status === "up");
     const anyDown = nodes.some(n => n.status === "down");
     document.getElementById("overall").innerHTML =
-      `<span class="dot" style="background:${anyDown ? "#ef4444" : allUp ? "#22c55e" : "#eab308"}"></span> ` +
+      `<span class="dot" style="background:${anyDown ? "var(--berry-600)" : allUp ? "var(--leaf-500)" : "var(--honey-500)"}"></span> ` +
       (nodes.length === 0 ? "Ноды не добавлены — заполните настройки ниже." :
         anyDown ? "Есть недоступные ноды." : allUp ? "Все ноды работают." : "Есть деградировавшие ноды.");
     document.getElementById("nodes").innerHTML = nodes.map(n => {
@@ -126,6 +164,7 @@ async function loadConfig() {
     setVal("cfg-interval", c.interval_sec);
     setVal("cfg-warn", c.latency_warn_ms);
     setVal("cfg-pages-every", c.pages_every_min);
+    if (c.ui_theme) { uiTheme = c.ui_theme; document.getElementById("cfg-theme").value = uiTheme; applyTheme(); }
     setVal("cfg-pages-owner", c.pages_owner);
     setVal("cfg-pages-repo", c.pages_repo);
     setVal("cfg-pages-branch", c.pages_branch || "main");
@@ -152,6 +191,7 @@ async function saveConfig() {
     interval_sec: parseInt(getVal("cfg-interval")) || 60,
     latency_warn_ms: parseInt(getVal("cfg-warn")) || 500,
     public_title: getVal("cfg-title"),
+    ui_theme: document.getElementById("cfg-theme").value || "system",
     pages_owner: getVal("cfg-pages-owner"),
     pages_repo: getVal("cfg-pages-repo"),
     pages_branch: getVal("cfg-pages-branch") || "main",
