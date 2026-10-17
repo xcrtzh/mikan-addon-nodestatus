@@ -33,6 +33,25 @@ func handleUI(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// handlePublicStatus serves the public status page without authentication.
+// It renders the same page that pushStatusPage would publish to GitHub Pages.
+// Meant to sit behind a reverse proxy that exposes only this path;
+// the addon's port itself stays on loopback.
+func handlePublicStatus(kv *KV) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			writeJSON(w, 405, map[string]string{"code": "invalid", "message": "method not allowed"})
+			return
+		}
+		cfg := loadConfig(kv)
+		doc := loadStatus(kv)
+		page := renderPublicPage(cfg, kv, doc)
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		w.Header().Set("Cache-Control", "no-cache, max-age=30")
+		w.Write([]byte(page))
+	}
+}
+
 type rpcCall struct {
 	Method string          `json:"method"`
 	Path   string          `json:"path"`

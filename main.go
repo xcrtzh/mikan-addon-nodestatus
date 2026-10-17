@@ -32,6 +32,7 @@ func main() {
 	mux.HandleFunc("/v2/check", withAuth(handleCheck))
 	mux.HandleFunc("/ui/", withAuth(handleUI))
 	mux.HandleFunc("/v2/ui/rpc", withAuth(handleRPC(kv)))
+	mux.HandleFunc("/status", handlePublicStatus(kv))
 
 	go proberLoop(kv)
 
