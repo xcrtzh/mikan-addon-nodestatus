@@ -35,7 +35,6 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/tool-nodestatus:${{ github.ref_name }}
-          outputs: type=image,name=ghcr.io/${{ github.repository_owner }}/tool-nodestatus,push-by-digest=true,name-canonical=true
 
       - name: Export digest
         id: digest
